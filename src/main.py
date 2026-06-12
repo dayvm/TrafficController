@@ -16,6 +16,8 @@ def parse_args():
     p.add_argument("--camera",   type=int, default=1)
     p.add_argument("--model",    default=os.path.join(os.path.dirname(__file__), "../TrafficController/model/EFFICIENTNET_best.pth"))
     p.add_argument("--n-frames", type=int, default=N_FRAMES)
+    p.add_argument("--simulate", action="store_true")
+    p.add_argument("--images-dir", default="images")
     return p.parse_args()
 
 def classify_yellow(cam: Camera, clf: Classifier, n: int) -> tuple[int, int]:
@@ -27,8 +29,8 @@ def classify_yellow(cam: Camera, clf: Classifier, n: int) -> tuple[int, int]:
 def main():
     args = parse_args()
     clf    = Classifier(args.model)
-    cam    = Camera(index=args.camera)
-    serial = ArduinoSerial(port=args.port)
+    cam = Camera(index=args.camera, images_dir=args.images_dir)
+    serial = ArduinoSerial(port=args.port, simulate=args.simulate)
     t_right = t_bottom = BASE_GREEN
     try:
         cycle = 0

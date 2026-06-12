@@ -19,7 +19,14 @@ class Classifier:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = EfficientNet().to(self.device)
         ckpt = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(ckpt.get("model_state_dict", ckpt))
+
+        state = (
+            ckpt.get("model_state_dict")
+            or ckpt.get("model_state")
+            or ckpt
+        )
+
+        self.model.load_state_dict(state)
         self.model.eval()
 
     def predict(self, frame_bgr: np.ndarray) -> tuple[int, int, int]:
