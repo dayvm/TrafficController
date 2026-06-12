@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TrafficController</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #1f2933;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+
+    main {
+      width: min(720px, calc(100% - 32px));
+      background: white;
+      border: 1px solid #d9e2ec;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    input[type="file"] {
+      padding: 12px;
+      border: 1px solid #bcccdc;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+
+    button {
+      width: fit-content;
+      border: 0;
+      border-radius: 6px;
+      padding: 12px 18px;
+      background: #2563eb;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: wait;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid #d9e2ec;
+      display: none;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #d9e2ec;
+      white-space: pre-line;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>TrafficController</h1>
+
+    <form id="uploadForm">
+      <input id="imageInput" type="file" accept="image/*" required />
+      <img id="preview" alt="Prévia da imagem enviada" />
+      <button id="submitButton" type="submit">Analisar imagem</button>
+    </form>
+
+    <div id="result" class="result">Envie uma imagem para analisar.</div>
+  </main>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const result = document.getElementById("result");
+    const submitButton = document.getElementById("submitButton");
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+
+      if (!file) {
+        preview.style.display = "none";
+        preview.removeAttribute("src");
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+      result.textContent = "Imagem selecionada. Clique em analisar.";
+      result.classList.remove("error");
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const file = imageInput.files[0];
+
+      if (!file) {
+        result.textContent = "Selecione uma imagem primeiro.";
+        result.classList.add("error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      submitButton.disabled = true;
+      result.textContent = "Analisando imagem...";
+      result.classList.remove("error");
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Erro ao analisar imagem");
+        }
+
+        result.textContent =
+          `Classe detectada: ${data.class_id}\n` +
+          `Carros na direita: ${data.right_cars}\n` +
+          `Carros embaixo: ${data.bottom_cars}`;
+
+      } catch (error) {
+        result.textContent = error.message;
+        result.classList.add("error");
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
