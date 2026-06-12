@@ -5,12 +5,17 @@ import sys, os
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
-from config import CAMERA_INDEX, YELLOW_TIME, N_FRAMES
+from config import CAMERA_INDEX, YELLOW_TIME, N_FRAMES, USE_CAMERA
 
 
 class Camera:
-    def __init__(self, index: int = CAMERA_INDEX, images_dir: str = "images"):
-        self.cap = cv2.VideoCapture(index)
+    def __init__(
+        self,
+        index: int = CAMERA_INDEX,
+        images_dir: str = "images",
+        use_camera: bool = USE_CAMERA
+    ):
+        self.cap = None
         self.images_dir = Path(images_dir)
         self.image_index = 0
 
@@ -19,15 +24,25 @@ class Camera:
             if p.suffix.lower() in [".png", ".jpg", ".jpeg"]
         ]) if self.images_dir.exists() else []
 
+        if not use_camera:
+            print(f"[IMAGENS] Camera desativada. Usando pasta: {images_dir}")
+
+            if not self.image_paths:
+                raise RuntimeError(f"Nenhuma imagem encontrada em: {images_dir}")
+
+            return
+
+        self.cap = cv2.VideoCapture(index)
+
         if not self.cap.isOpened():
-            print(f"[AVISO] Não foi possível abrir câmera {index}. Usando pasta: {images_dir}")
+            print(f"[AVISO] Nao foi possivel abrir camera {index}. Usando pasta: {images_dir}")
             self.cap.release()
             self.cap = None
 
             if not self.image_paths:
                 raise RuntimeError(f"Nenhuma imagem encontrada em: {images_dir}")
         else:
-            print(f"[OK] Câmera {index} aberta")
+            print(f"[OK] Camera {index} aberta")
             time.sleep(0.5)
 
     def capture_frames(self, n: int = N_FRAMES) -> list[np.ndarray]:

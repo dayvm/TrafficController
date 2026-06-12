@@ -1,3 +1,16 @@
+import os
+
+
+def env_bool(name: str, default: bool = True) -> bool:
+    value = os.getenv(name)
+
+    if value is None:
+        return default
+
+    return value.lower() in ("1", "true", "yes", "sim", "s")
+
+USE_CAMERA = env_bool("USE_CAMERA", False)
+
 BASE_GREEN   = 30
 STEP         = 10
 MIN_GREEN    = 10
