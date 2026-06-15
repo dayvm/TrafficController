@@ -9,7 +9,7 @@ def env_bool(name: str, default: bool = True) -> bool:
 
     return value.lower() in ("1", "true", "yes", "sim", "s")
 
-USE_CAMERA = env_bool("USE_CAMERA", False)
+USE_CAMERA = env_bool("USE_CAMERA", True)
 
 BASE_GREEN   = 30
 STEP         = 10
